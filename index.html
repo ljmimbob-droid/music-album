@@ -1,0 +1,692 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="UTF-8"/>
+<meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+<title>뮤직 앨범</title>
+<style>
+  *{box-sizing:border-box;margin:0;padding:0}
+  body{background:#0a0a0f;color:#e8e8f0;font-family:'Apple SD Gothic Neo','Noto Sans KR',sans-serif;display:flex;justify-content:center;overflow-x:hidden}
+  #app{width:100%;max-width:440px;min-height:100vh;display:flex;flex-direction:column}
+  header{position:fixed;top:0;left:50%;transform:translateX(-50%);width:100%;max-width:440px;z-index:50;display:flex;justify-content:space-between;align-items:center;padding:14px 20px;background:rgba(10,10,15,0.9);backdrop-filter:blur(20px);border-bottom:1px solid rgba(255,255,255,0.08)}
+  .logo{font-size:18px;font-weight:900;background:linear-gradient(90deg,var(--primary),var(--secondary));-webkit-background-clip:text;-webkit-text-fill-color:transparent}
+  .hleft{display:flex;align-items:center;gap:8px;font-size:11px;font-weight:700;letter-spacing:3px;color:rgba(255,255,255,0.4)}
+  .avatar{width:32px;height:32px;border-radius:50%;border:1px solid rgba(255,255,255,0.2);background:#1a1a2e;display:flex;align-items:center;justify-content:center;cursor:pointer;font-size:14px;position:relative}
+  .cdot{position:absolute;top:-2px;right:-2px;width:10px;height:10px;background:var(--primary);border-radius:50%;border:2px solid #0a0a0f;display:none}
+  main{padding:80px 20px 90px;flex:1;display:flex;flex-direction:column;align-items:center;position:relative;z-index:10}
+  .tab{width:100%;display:flex;flex-direction:column;gap:18px}
+  .cdwrap{position:relative;width:100%;display:flex;align-items:center;justify-content:center;padding:16px 0}
+  .anb{position:absolute;width:40px;height:40px;border-radius:50%;border:1px solid rgba(255,255,255,0.1);background:rgba(18,18,30,0.8);display:flex;align-items:center;justify-content:center;cursor:pointer;z-index:20;font-size:16px;color:var(--primary);transition:background .2s}
+  .anb:hover{background:rgba(255,255,255,0.05)}
+  .anb.prev{left:0}.anb.next{right:0}
+  .cdc{position:relative;cursor:pointer}
+  .cdg{position:absolute;inset:0;border-radius:50%;filter:blur(28px);opacity:0.4;background:radial-gradient(circle,var(--primary) 0%,var(--secondary) 60%,transparent 100%)}
+  .cdd{width:240px;height:240px;border-radius:50%;border:1px solid rgba(255,255,255,0.15);overflow:hidden;position:relative;background:#1c1c2e}
+  .cdd.playing{animation:spin 15s linear infinite}
+  .cdi{width:100%;height:100%;object-fit:cover;opacity:0.75;mix-blend-mode:screen}
+  .cds{position:absolute;inset:0;mix-blend-mode:overlay;opacity:0.7;pointer-events:none}
+  .cdr{position:absolute;inset:0;border-radius:50%;border:1px solid rgba(255,255,255,0.07);pointer-events:none}
+  .cdh{position:absolute;inset:0;display:flex;align-items:center;justify-content:center}
+  .cdhi{width:52px;height:52px;border-radius:50%;background:rgba(0,0,0,0.9);border:2px solid rgba(255,255,255,0.15);display:flex;align-items:center;justify-content:center}
+  .cdhp{width:14px;height:14px;border-radius:50%;background:#0a0a0f;border:1px solid rgba(255,255,255,0.1);display:flex;align-items:center;justify-content:center}
+  .cdhd{width:5px;height:5px;border-radius:50%;background:var(--primary);opacity:0.7}
+  .cdst{position:absolute;bottom:-8px;left:50%;transform:translateX(-50%);padding:4px 14px;background:rgba(15,15,25,0.95);border:1px solid rgba(255,255,255,0.15);border-radius:20px;display:flex;align-items:center;gap:6px;z-index:30;white-space:nowrap}
+  .sdot{width:6px;height:6px;border-radius:50%;background:var(--primary)}
+  .sdot.on{animation:blink 1s infinite}
+  .stxt{font-size:9px;font-weight:700;letter-spacing:2px;color:var(--primary);font-family:monospace;text-transform:uppercase}
+  .tmeta{width:100%;text-align:center;margin-top:8px}
+  .ttitle{font-size:20px;font-weight:900;color:#fff;margin-bottom:4px}
+  .tsub{font-size:11px;font-weight:700;letter-spacing:2px;color:var(--primary);text-transform:uppercase;font-family:monospace}
+  .tbadges{display:flex;justify-content:center;gap:8px;margin-top:6px}
+  .badge{padding:2px 8px;border:1px solid rgba(255,255,255,0.1);border-radius:4px;font-size:10px;color:rgba(255,255,255,0.45);font-family:monospace}
+  .pbox{width:100%;background:rgba(18,18,30,0.6);border:1px solid rgba(255,255,255,0.06);border-radius:16px;padding:16px;display:flex;flex-direction:column;gap:12px}
+  input[type=range]{width:100%;height:3px;-webkit-appearance:none;appearance:none;background:rgba(255,255,255,0.12);border-radius:3px;outline:none;cursor:pointer}
+  input[type=range]::-webkit-slider-thumb{-webkit-appearance:none;width:12px;height:12px;border-radius:50%;background:var(--primary);cursor:pointer}
+  .trow{display:flex;justify-content:space-between;font-size:10px;font-family:monospace;color:rgba(255,255,255,0.4)}
+  .crow{display:flex;align-items:center;justify-content:space-between}
+  .cb{background:transparent;border:none;cursor:pointer;padding:8px;display:flex;align-items:center;color:rgba(255,255,255,0.5)}
+  .cb.on{color:var(--primary)}
+  .cc{display:flex;align-items:center;gap:12px}
+  .pb{width:48px;height:48px;border-radius:50%;background:linear-gradient(135deg,var(--primary),var(--secondary));border:none;cursor:pointer;display:flex;align-items:center;justify-content:center;transition:transform .15s;box-shadow:0 4px 20px rgba(0,0,0,0.3)}
+  .pb:hover{transform:scale(1.06)}
+  .pb:active{transform:scale(0.96)}
+  .vrow{display:flex;align-items:center;gap:8px;padding-top:8px;border-top:1px solid rgba(255,255,255,0.06)}
+  .vb{background:transparent;border:none;cursor:pointer}
+  .astatus{padding-top:8px;border-top:1px solid rgba(255,255,255,0.06);font-size:9px;font-family:monospace;letter-spacing:1px;text-align:center;color:var(--primary)}
+  .astatus.err{color:#f87171}
+  .astatus.idle{color:rgba(255,255,255,0.35)}
+  .tlbox{width:100%;background:rgba(18,18,30,0.5);border:1px solid rgba(255,255,255,0.06);border-radius:16px;padding:14px}
+  .tlhdr{display:flex;justify-content:space-between;align-items:center;margin-bottom:10px;padding-bottom:10px;border-bottom:1px solid rgba(255,255,255,0.06)}
+  .tllbl{display:flex;align-items:center;gap:6px;font-size:10px;font-weight:700;letter-spacing:2px;color:rgba(255,255,255,0.45);font-family:monospace;text-transform:uppercase}
+  .tldot{width:6px;height:6px;border-radius:50%;background:var(--primary)}
+  .tli{border-radius:10px;border:1px solid transparent;overflow:hidden;transition:border-color .2s}
+  .tli.on{border-color:rgba(255,255,255,0.1);background:rgba(255,255,255,0.04)}
+  .tlr{display:flex;align-items:center;justify-content:space-between;padding:8px 10px;cursor:pointer}
+  .tll{display:flex;align-items:center;gap:10px}
+  .tnum{font-size:10px;font-family:monospace;color:rgba(255,255,255,0.3)}
+  .tnum.on{color:var(--primary)}
+  .tname{font-size:12px;color:rgba(255,255,255,0.7)}
+  .tname.on{font-weight:700;color:#fff}
+  .tbadge{font-size:8px;padding:1px 5px;border-radius:3px;font-family:monospace;letter-spacing:1px;border:1px solid}
+  .tright{display:flex;align-items:center;gap:8px}
+  .ltog{background:transparent;border:none;cursor:pointer;padding:2px;color:rgba(255,255,255,0.3);line-height:1}
+  .ltog.on{color:var(--primary)}
+  .lpanel{overflow:hidden;max-height:0;transition:max-height .35s ease}
+  .lpanel.on{max-height:700px}
+  .lcont{padding:10px 14px 14px;border-top:1px solid rgba(255,255,255,0.05);background:rgba(0,0,0,0.2)}
+  .ltxt{font-size:11px;line-height:2;color:rgba(255,255,255,0.6);white-space:pre-wrap;font-family:'Apple SD Gothic Neo','Noto Sans KR',sans-serif}
+  .eqbars{display:flex;align-items:flex-end;gap:1.5px;width:14px;height:14px}
+  .eqb{width:2.5px;background:var(--primary);border-radius:1px;animation:eq .6s ease-in-out infinite alternate}
+  .eqb:nth-child(2){animation-delay:.15s}.eqb:nth-child(3){animation-delay:.3s}
+  .frow{width:100%;display:flex;justify-content:space-between;align-items:flex-end;border-top:1px solid rgba(255,255,255,0.08);padding-top:12px}
+  .flbl{font-size:8px;font-family:monospace;color:rgba(255,255,255,0.3);letter-spacing:2px;text-transform:uppercase;margin-bottom:2px}
+  .fval{font-size:10px;font-family:monospace;color:rgba(255,255,255,0.6)}
+  .stval{font-size:10px;font-family:monospace;color:var(--primary);font-weight:700}
+  .srwrap{position:relative}
+  .sri{width:100%;background:rgba(18,18,30,0.9);border:1px solid rgba(255,255,255,0.1);border-radius:12px;padding:10px 12px 10px 38px;font-size:12px;color:#fff;outline:none;font-family:inherit}
+  .sri::placeholder{color:rgba(255,255,255,0.3)}
+  .sico{position:absolute;left:12px;top:50%;transform:translateY(-50%);color:rgba(255,255,255,0.3);pointer-events:none}
+  .sres{display:flex;align-items:center;gap:12px;padding:10px;border-radius:10px;border:1px solid rgba(255,255,255,0.06);background:rgba(18,18,30,0.4);cursor:pointer;margin-bottom:8px;transition:border-color .2s,background .2s}
+  .sres:hover{border-color:rgba(255,255,255,0.12);background:rgba(255,255,255,0.04)}
+  .srimg{width:40px;height:40px;border-radius:8px;object-fit:cover;border:1px solid rgba(255,255,255,0.1)}
+  .sgrid{display:grid;grid-template-columns:1fr 1fr;gap:10px}
+  .scard{background:rgba(18,18,30,0.8);border:1px solid rgba(255,255,255,0.06);border-radius:14px;padding:14px 12px;text-align:center;display:flex;flex-direction:column;align-items:center;gap:6px}
+  .slbl{font-size:9px;font-family:monospace;color:rgba(255,255,255,0.35);text-transform:uppercase;letter-spacing:1px}
+  .sval2{font-size:20px;font-weight:900;color:#fff}
+  .ccard{position:relative;background:rgba(18,18,30,0.8);border:2px dashed rgba(255,255,255,0.12);border-radius:16px;padding:16px;overflow:hidden}
+  .cglw{position:absolute;top:-20px;right:-20px;width:80px;height:80px;border-radius:50%;filter:blur(20px);pointer-events:none}
+  .ctop{display:flex;justify-content:space-between;align-items:flex-start;margin-bottom:10px}
+  .cltd{display:block;font-size:8px;font-family:monospace;letter-spacing:2px;padding:2px 6px;border-radius:4px;margin-bottom:4px;text-transform:uppercase}
+  .ctitle2{font-size:12px;font-weight:900;color:#fff;letter-spacing:1px;text-transform:uppercase}
+  .cbody{font-size:10px;font-family:monospace;color:rgba(255,255,255,0.5);line-height:1.7;border-top:1px solid rgba(255,255,255,0.06);border-bottom:1px solid rgba(255,255,255,0.06);padding:8px 0;margin-bottom:12px}
+  .csign{background:rgba(255,255,255,0.04);border-radius:10px;padding:10px;display:flex;align-items:center;justify-content:space-between}
+  .csinp{width:100%;background:#0a0a0f;border:1px solid rgba(255,255,255,0.1);border-radius:8px;padding:8px 10px;font-size:12px;color:#fff;outline:none;font-family:inherit;margin-bottom:8px}
+  .cbtn{width:100%;padding:9px 0;border:none;border-radius:8px;font-size:10px;font-weight:700;font-family:monospace;letter-spacing:2px;cursor:pointer;text-transform:uppercase}
+  .cwarn{font-size:9px;color:#f87171;font-family:monospace;text-align:center;margin-top:4px}
+  .fitem{display:flex;align-items:center;justify-content:space-between;padding:8px 10px;background:rgba(18,18,30,0.8);border:1px solid rgba(255,255,255,0.06);border-radius:10px;cursor:pointer;margin-bottom:6px}
+  .fitem:hover{border-color:rgba(255,255,255,0.12)}
+  .shd{font-size:20px;font-weight:900;color:#fff;display:flex;align-items:center;gap:8px;margin-bottom:4px}
+  .ssub{font-size:11px;font-family:monospace;color:rgba(255,255,255,0.35);letter-spacing:1px}
+  .sublbl{font-size:10px;font-family:monospace;color:rgba(255,255,255,0.4);letter-spacing:2px;text-transform:uppercase;margin-bottom:10px;display:flex;align-items:center;gap:6px}
+  nav{position:fixed;bottom:0;left:50%;transform:translateX(-50%);width:100%;max-width:440px;z-index:50;display:flex;justify-content:space-around;align-items:center;padding:12px 24px 20px;background:rgba(10,10,15,0.92);backdrop-filter:blur(24px);border-top:1px solid rgba(255,255,255,0.08)}
+  .nb{display:flex;flex-direction:column;align-items:center;gap:4px;background:transparent;border:none;cursor:pointer;transition:transform .15s}
+  .nb:hover{transform:scale(1.08)}
+  .nl{font-size:9px;font-family:monospace;letter-spacing:1px;text-transform:uppercase}
+  #bgg{position:fixed;inset:0;pointer-events:none;z-index:0;overflow:hidden}
+  .blob{position:absolute;top:50%;left:50%;transform:translate(-50%,-50%);width:180%;height:100%;opacity:.28;filter:blur(120px);transition:background 1s}
+  @keyframes spin{from{transform:rotate(0)}to{transform:rotate(360deg)}}
+  @keyframes blink{0%,100%{opacity:1}50%{opacity:.35}}
+  @keyframes eq{from{height:20%}to{height:90%}}
+  @keyframes fu{from{opacity:0;transform:translateY(12px)}to{opacity:1;transform:translateY(0)}}
+  .fu{animation:fu .28s ease both}
+  ::-webkit-scrollbar{width:3px}
+  ::-webkit-scrollbar-thumb{background:rgba(255,255,255,0.15);border-radius:3px}
+  svg{display:inline-block;vertical-align:middle}
+</style>
+</head>
+<body>
+<div id="app">
+  <div id="bgg"><div class="blob" id="blob"></div></div>
+  <header>
+    <div class="hleft">
+      <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="color:var(--primary)"><path d="M9 18V5l12-2v13"/><circle cx="6" cy="18" r="3"/><circle cx="18" cy="16" r="3"/></svg>
+      PLAYER
+    </div>
+    <div class="logo">뮤직 앨범</div>
+    <div class="avatar" onclick="goTab('보관함')">👤<span class="cdot" id="cdot"></span></div>
+  </header>
+  <main id="mc"></main>
+  <nav>
+    <button class="nb" onclick="goTab('홈')" id="nh">
+      <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/><polyline points="9 22 9 12 15 12 15 22"/></svg>
+      <span class="nl">홈</span>
+    </button>
+    <button class="nb" onclick="goTab('검색')" id="ns">
+      <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
+      <span class="nl">검색</span>
+    </button>
+    <button class="nb" onclick="goTab('보관함')" id="nl2">
+      <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M2 3h6a4 4 0 0 1 4 4v14a3 3 0 0 0-3-3H2z"/><path d="M22 3h-6a4 4 0 0 0-4 4v14a3 3 0 0 1 3-3h7z"/></svg>
+      <span class="nl">보관함</span>
+    </button>
+  </nav>
+</div>
+<script>
+// ── mp3 파일명 (GitHub에 올라간 실제 파일명 그대로) ──────────────────────────
+const FILES = {
+  "t1-1": "눈 내리던 카페 한켠에서.mp3",
+  "t1-2": "달콤한 입맞춤-2.mp3",
+  "t1-3": "함께 떠나자1.mp3",
+  "t2-1": "먹구름의 결의.mp3",
+  "t2-2": "여름비의 낮 (1).mp3",
+  "t2-3": "잠시 멈춰요.mp3",
+  "t3-1": "추억의 맛.mp3",
+  "t3-2": "함박눈 거리에 서서.mp3",
+  "t3-3": "여기서 함께 살자.mp3",
+};
+
+// index.html과 mp3가 같은 폴더에 있으므로 파일명만 사용
+function audioURL(id) {
+  return encodeURIComponent(FILES[id]);
+}
+
+// ── 가사 ────────────────────────────────────────────────────────────────────
+const LY = {
+  "t1-1":`[1절]
+유리창에 번진 흰 숨
+김이 되다 사라진 말들
+창밖으로 조용히 쌓이는
+하얀 오늘이 나를 감싸
+
+라떼 위에 얹힌 거품
+손끝 따라 그려 본 네 이름
+말끔하게 다시 지우며
+괜찮다고 나를 달래
+
+[합창]
+눈 내리던 카페 한켠에서
+작은 테이블 두 손으로
+따뜻한 이 라떼를 감싸 안고
+숨을 고르네 천천히
+
+아무 말도 필요 없던 순간
+잔잔하게 번진 미소 하나
+이 고요함 속에 숨어 있는
+아주 작은 설렘
+나 알고 있어 (oh)
+
+[브리지]
+첫 모금에 녹아드는
+우유 거품 사이로
+알 수 없는 내일들이
+달콤하게 스며들어
+
+혹시라도 문이 열리고
+눈 털어낸 네가 들어와
+내 맞은편에 앉을까
+생각만으로도 따뜻해져`,
+  "t1-2":`[Verse 1]
+괜히 오늘 거울 앞에
+열두 번은 또 웃어 봐
+네가 보낸 짧은 문자
+한 줄인데 온종일 떠올라
+
+[Pre-Chorus]
+가까워지는 발자국 소리
+심장이 먼저 알아
+아무렇지 않은 척해도
+볼이 먼저 물들어 가
+
+[Chorus]
+달콤한 입맞춤
+살짝 스치면 (oh)
+온 세상이 핑크빛으로 번져
+두 눈을 감으면 더 선명해져
+너의 호흡 온도까지 다 느껴져
+이 순간을 꼭 담아 둘래
+처음인 듯 매번 또 설레
+
+[Bridge]
+떨리는 이 공기 위에
+너와 나의 숨을 더해
+아무 말도 하지 말고
+서로를 더 가까이 (가까이)`,
+  "t1-3":`[Intro]
+햇살 튀는 아침 공기 속에
+가방 하나 툭 메고서 (나와 볼래?)
+구겨진 지도를 펴던 그때
+웃음 나던 장면처럼
+
+[Chorus]
+함께 떠나자
+지금 이 순간 잡아서 (함께 떠나자)
+낡은 이야기 새로 이어 가
+발길 닿는 대로
+작은 실수도 웃으며 (같이 가보자)
+서로의 어제를 가볍게 안고
+함께 떠나자
+
+[Bridge]
+어디라도 좋아
+너와 나면 좋아 (oh)
+처음 그 설렘 다시 눌러 재생
+
+[Outro]
+손뼉 소리 따라
+하나 둘 셋 맞추면
+어제와 내일이
+같이 뛰는 지금
+(함께 떠나자)`,
+  "t2-1":`[구절]
+먹구름 아래 숨을 참아
+바람의 외침이 나를 감싸
+파도가 부딪혀도 나는 간다
+
+[후렴구]
+폭풍 속에서 춤을 춰
+나의 길은 멈추지 않아
+번개가 빛을 내리쬐어도
+이 심장은 타오르리
+
+[2절]
+물방울이 칼처럼 떨어져
+어둠 속 빛나는 나의 꿈
+휘몰아치는 소리에도 멈추지 않아
+
+[브릿지]
+구름이 깨지고 빛이 비쳐
+내 눈은 더 이상 흔들리지 않아
+검은 하늘도 나를 막을 수 없어
+나는 나의 전쟁을 이긴다`,
+  "t2-2":`[구절]
+여름비가 창문을 두드려
+소리마다 마음이 젖어가
+
+파전 굽는 향기가 스며들어
+그리움의 맛을 더해줘
+
+빗방울이 속삭여 어디론가 데려가
+
+[후렴구]
+여름비야 춤을 춰
+따뜻한 이 순간을 안아줘
+파전 한입 추억 한입
+비 오는 낮 낭만이 스며들어
+
+[브릿지]
+비가 멈춰도 기억은 남아
+파전의 온기처럼 우리는
+이 순간을 살았어
+비와 함께 함께였어`,
+  "t2-3":`[구절]
+잠시만요 말할게요
+여기까지 함께 걸어온 길
+소중한 기억 가득 담긴
+이 공간 속 우리 이야기
+
+[프리코러스]
+새로운 꿈이 저 멀리서
+손짓하며 날 부르고 있어
+
+[후렴구]
+잠시 멈춰요 조금만 기다려요
+우리의 시간 다시 올 거예요
+작은 쉼표 뒤엔 더 큰 이야기
+다시 만나 웃을 날을 약속해요
+
+[브릿지]
+떠나는 게 아니에요
+잠깐의 쉼일 뿐이에요
+더 나은 날 위해
+더 깊은 이야기를 위해`,
+  "t3-1":`[구절]
+따뜻한 김이 올라오는
+그릇 속에 담긴 시간들
+한 입 한 입에 스며드는
+할머니 손길의 온기
+
+[프리코러스]
+지금 이 순간 돌아가
+어린 날의 부엌 안
+
+[후렴구]
+추억의 맛이 여기 있네
+시간을 넘어 온 그 손맛
+눈 감으면 떠오르는
+그날의 사랑 그날의 집
+
+[브릿지]
+흘러간 시간은 멀어져도
+그 향기는 내 맘에 살아
+맛을 따라 걸어가면
+그곳에 난 다시 서 있네`,
+  "t3-2":`[구절]
+가을 단풍 나무 아래 걷던 날
+붉은 잎 사이로 햇살이 춤췄지
+그날의 바람은 내 마음을 흔들고
+긴 그림자만 내 곁에 남았어
+
+[후렴구]
+함박눈 내리는 거리 위에
+멈춰선 나의 발걸음
+너의 온기가 그리워
+눈 속에 네가 보여
+
+[2절]
+어느새 겨울이 찾아왔나 봐
+찬 바람 속에 숨이 하얗게 흩어져
+손끝이 시려도 너를 떠올리며
+눈물 대신 웃음을 배웠어
+
+[브릿지]
+기억 속 너와 나의 계절
+눈처럼 사라질까 두려워
+잡고 싶어 너의 손
+이 겨울이 끝나기 전에`,
+  "t3-3":`떠나야 한다고 말했지
+멀리 가야 한다고 했지만
+그 눈빛 속엔 흔들림이 보여
+너도 알고 있잖아 이 마음을
+
+반짝이는 반지 하나 손에 쥐고
+떨리는 목소리로 말했을 때
+
+[후렴구]
+여기서 함께 살아볼까
+시간 멈춘 이곳에서
+네 마음도 내 마음 같다면
+우린 그냥 여기서 살아볼까
+
+[2절]
+하늘은 점점 붉어지고
+우리의 그림자는 길어지고
+가는 길 위에 남겨진 발자국
+다시 돌아올 수 있을까
+
+[프리코러스]
+너의 대답 기다리는 이 순간
+가슴 속에 파도가 일렁여`,
+};
+
+// ── 앨범 데이터 ─────────────────────────────────────────────────────────────
+const AL = [
+  { id:"a1", title:"설렘 컬렉션", sub:"LOVE & MOMENT", year:"2025", serial:"SL-001", fmt:"MP3 AUDIO", status:"정식 발매",
+    p:"#c084fc", s:"#f472b6", img:"https://images.unsplash.com/photo-1501854140801-50d01698950b?w=400&q=80",
+    tracks:[
+      {id:"t1-1", num:"01", name:"눈 내리던 카페 한켠에서", title:true},
+      {id:"t1-2", num:"02", name:"달콤한 입맞춤", title:false},
+      {id:"t1-3", num:"03", name:"함께 떠나자", title:false},
+    ]},
+  { id:"a2", title:"감성 일기", sub:"DAILY EMOTIONS", year:"2025", serial:"GI-002", fmt:"MP3 AUDIO", status:"정식 발매",
+    p:"#60a5fa", s:"#34d399", img:"https://images.unsplash.com/photo-1470252649378-9c29740c9fa8?w=400&q=80",
+    tracks:[
+      {id:"t2-1", num:"01", name:"먹구름의 결의", title:true},
+      {id:"t2-2", num:"02", name:"여름비의 낮", title:false},
+      {id:"t2-3", num:"03", name:"잠시 멈춰요", title:false},
+    ]},
+  { id:"a3", title:"그리움 노트", sub:"NOSTALGIA NOTE", year:"2025", serial:"GN-003", fmt:"MP3 AUDIO", status:"정식 발매",
+    p:"#fb923c", s:"#fbbf24", img:"https://images.unsplash.com/photo-1508739773434-c26b3d09e071?w=400&q=80",
+    tracks:[
+      {id:"t3-1", num:"01", name:"추억의 맛", title:false},
+      {id:"t3-2", num:"02", name:"함박눈 거리에 서서", title:true},
+      {id:"t3-3", num:"03", name:"여기서 함께 살자", title:false},
+    ]},
+];
+
+// ── 상태 ────────────────────────────────────────────────────────────────────
+const S = { tab:'홈', ai:0, ti:0, playing:false, vol:0.8, muted:false, repeat:false, sq:'', favs:[], heard:[], cname:'', cert:false, lyr:null };
+const a  = () => AL[S.ai];
+const t  = () => a().tracks[S.ti];
+const allT = () => AL.flatMap(al => al.tracks.map(tr => ({...tr, al})));
+const fmt  = s => { if(!s||isNaN(s)) return '0:00'; const m=Math.floor(s/60),r=Math.floor(s%60); return `${m}:${String(r).padStart(2,'0')}`; };
+
+// ── Audio ────────────────────────────────────────────────────────────────────
+const AUD = new Audio();
+AUD.volume = S.vol;
+
+function loadTrack(id, autoplay=false) {
+  AUD.src = audioURL(id);
+  AUD.load();
+  if (!S.heard.includes(id)) S.heard.push(id);
+  if (autoplay) AUD.play().catch(() => {});
+}
+
+AUD.addEventListener('timeupdate', () => {
+  const p=document.getElementById('prog'), e=document.getElementById('tel'), d=document.getElementById('tdur');
+  if (p) p.value = AUD.currentTime;
+  if (e) e.textContent = fmt(AUD.currentTime);
+  if (d && AUD.duration && !isNaN(AUD.duration)) {
+    d.textContent = fmt(AUD.duration);
+    if (p) p.max = AUD.duration;
+  }
+});
+AUD.addEventListener('ended',   () => { if(S.repeat){AUD.currentTime=0;AUD.play();}else nextT(); });
+AUD.addEventListener('playing', () => { S.playing=true;  renderAll(); });
+AUD.addEventListener('pause',   () => { S.playing=false; renderAll(); });
+AUD.addEventListener('error',   () => {
+  S.playing = false;
+  const el = document.getElementById('astatus');
+  if (el) { el.className='astatus err'; el.textContent='⚠ 파일 로드 실패 — 파일명을 확인해주세요'; }
+});
+AUD.addEventListener('canplay', () => {
+  const el = document.getElementById('astatus');
+  if (el && !S.playing) { el.className='astatus idle'; el.textContent='✅ 파일 준비 완료 — ▶ 버튼을 눌러 재생'; }
+});
+
+// ── 컨트롤 ───────────────────────────────────────────────────────────────────
+function togglePlay() {
+  if (!AUD.src) { loadTrack(t().id, true); return; }
+  S.playing ? AUD.pause() : AUD.play().catch(()=>{});
+}
+function nextT()    { S.ti=(S.ti+1)%a().tracks.length; loadTrack(t().id,S.playing); renderAll(); }
+function prevT()    { if(AUD.currentTime>3){AUD.currentTime=0;return;} S.ti=S.ti>0?S.ti-1:a().tracks.length-1; loadTrack(t().id,S.playing); renderAll(); }
+function selT(i)    { S.ti=i; loadTrack(t().id,true); renderAll(); }
+function nextA()    { S.ai=(S.ai+1)%AL.length; S.ti=0; loadTrack(t().id,S.playing); updT(); renderAll(); }
+function prevA()    { S.ai=(S.ai-1+AL.length)%AL.length; S.ti=0; loadTrack(t().id,S.playing); updT(); renderAll(); }
+function seek(v)    { AUD.currentTime=parseFloat(v); }
+function setVol(v)  { S.vol=parseFloat(v); AUD.volume=S.muted?0:S.vol; }
+function togMute()  { S.muted=!S.muted; AUD.volume=S.muted?0:S.vol; renderAll(); }
+function togRep()   { S.repeat=!S.repeat; AUD.loop=S.repeat; renderAll(); }
+function togLy(id)  { S.lyr=S.lyr===id?null:id; renderAll(); }
+function goTab(tb)  { S.tab=tb; renderAll(); }
+function goT(ai,ti) { S.ai=ai; S.ti=ti; loadTrack(AL[ai].tracks[ti].id,true); S.tab='홈'; updT(); renderAll(); }
+function certify()  { if(S.heard.length>0){S.cert=true;document.getElementById('cdot').style.display='block';renderAll();} }
+function updSearch(v){ S.sq=v; renderAll(); }
+function togFav(id) { S.favs=S.favs.includes(id)?S.favs.filter(x=>x!==id):[...S.favs,id]; renderAll(); }
+
+function updT() {
+  const al=a();
+  document.documentElement.style.setProperty('--primary', al.p);
+  document.documentElement.style.setProperty('--secondary', al.s);
+  document.getElementById('blob').style.background=`radial-gradient(circle,${al.p}44 0%,${al.s}18 40%,transparent 70%)`;
+}
+
+// ── SVG 헬퍼 ─────────────────────────────────────────────────────────────────
+const sv = (p,sz=20,st='') => `<svg width="${sz}" height="${sz}" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="${st}">${p}</svg>`;
+const I = {
+  play:  `<polygon points="5 3 19 12 5 21 5 3"/>`,
+  pause: `<rect x="6" y="4" width="4" height="16"/><rect x="14" y="4" width="4" height="16"/>`,
+  prev:  `<polygon points="19 20 9 12 19 4 19 20"/><line x1="5" y1="19" x2="5" y2="5"/>`,
+  next:  `<polygon points="5 4 15 12 5 20 5 4"/><line x1="19" y1="5" x2="19" y2="19"/>`,
+  rep:   `<polyline points="17 1 21 5 17 9"/><path d="M3 11V9a4 4 0 0 1 4-4h14"/><polyline points="7 23 3 19 7 15"/><path d="M21 13v2a4 4 0 0 1-4 4H3"/>`,
+  hrt:   (f) => `<path d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78z" ${f?'fill="currentColor"':''}/>`,
+  vol:   `<polygon points="11 5 6 9 2 9 2 15 6 15 11 19 11 5"/><path d="M19.07 4.93a10 10 0 0 1 0 14.14M15.54 8.46a5 5 0 0 1 0 7.07"/>`,
+  volx:  `<polygon points="11 5 6 9 2 9 2 15 6 15 11 19 11 5"/><line x1="23" y1="9" x2="17" y2="15"/><line x1="17" y1="9" x2="23" y2="15"/>`,
+  mus:   `<path d="M9 18V5l12-2v13"/><circle cx="6" cy="18" r="3"/><circle cx="18" cy="16" r="3"/>`,
+  src:   `<circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/>`,
+  lib:   `<path d="M2 3h6a4 4 0 0 1 4 4v14a3 3 0 0 0-3-3H2z"/><path d="M22 3h-6a4 4 0 0 0-4 4v14a3 3 0 0 1 3-3h7z"/>`,
+  dsc:   `<circle cx="12" cy="12" r="10"/><circle cx="12" cy="12" r="3"/>`,
+  flm:   `<path d="M8.5 14.5A2.5 2.5 0 0 0 11 12c0-1.38-.5-2-1-3-1.072-2.143-.224-4.054 2-6 .5 2.5 2 4.9 4 6.5 2 1.6 3 3.5 3 5.5a7 7 0 1 1-14 0c0-1.153.433-2.294 1-3a2.5 2.5 0 0 0 2.5 2.5z"/>`,
+  awd:   `<circle cx="12" cy="8" r="6"/><path d="M15.477 12.89L17 22l-5-3-5 3 1.523-9.11"/>`,
+  chk:   `<polyline points="20 6 9 17 4 12"/>`,
+  str:   `<polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/>`,
+  chd:   `<polyline points="6 9 12 15 18 9"/>`,
+  chu:   `<polyline points="18 15 12 9 6 15"/>`,
+};
+
+// ── 렌더 ─────────────────────────────────────────────────────────────────────
+function renderHome() {
+  const al=a(), tr=t(), ip=S.playing, fv=S.favs.includes(tr.id);
+  const ct=AUD.currentTime||0, dr=AUD.duration&&!isNaN(AUD.duration)?AUD.duration:0;
+  const tlist = al.tracks.map((r,i) => {
+    const ac=S.ti===i, lo=S.lyr===r.id;
+    return `<li class="tli ${ac?'on':''}">
+      <div class="tlr" onclick="selT(${i})">
+        <div class="tll">
+          ${ac&&ip
+            ? `<div class="eqbars"><div class="eqb" style="height:30%"></div><div class="eqb" style="height:80%"></div><div class="eqb" style="height:50%"></div></div>`
+            : `<span class="tnum ${ac?'on':''}">${r.num}</span>`}
+          <span class="tname ${ac?'on':''}">${r.name}</span>
+          ${r.title ? `<span class="tbadge" style="color:${al.p};background:${al.p}22;border-color:${al.p}44">타이틀</span>` : ''}
+        </div>
+        <div class="tright">
+          ${S.favs.includes(r.id) ? sv(I.hrt(true),11,'color:#f472b6') : ''}
+          <button class="ltog ${lo?'on':''}" onclick="event.stopPropagation();togLy('${r.id}')">
+            ${lo ? sv(I.chu,13) : sv(I.chd,13)}
+          </button>
+        </div>
+      </div>
+      <div class="lpanel ${lo?'on':''}">
+        <div class="lcont"><pre class="ltxt">${LY[r.id]||'가사 없음'}</pre></div>
+      </div>
+    </li>`;
+  }).join('');
+
+  return `<div class="tab fu">
+    <div class="cdwrap">
+      <button class="anb prev" onclick="prevA()">&#9664;</button>
+      <div class="cdc">
+        <div class="cdg"></div>
+        <div class="cdd ${ip?'playing':''}">
+          <img class="cdi" src="${al.img}" referrerpolicy="no-referrer" crossorigin="anonymous"/>
+          <div class="cds" style="background:linear-gradient(120deg,rgba(255,255,255,.3) 0%,transparent 50%,${al.p}44 100%)"></div>
+          <div class="cdr" style="transform:scale(.88)"></div>
+          <div class="cdr" style="transform:scale(.73)"></div>
+          <div class="cdr" style="transform:scale(.55)"></div>
+          <div class="cdh"><div class="cdhi"><div class="cdhp"><div class="cdhd"></div></div></div></div>
+        </div>
+        <div class="cdst">
+          <span class="sdot ${ip?'on':''}"></span>
+          <span class="stxt">${ip?'재생 중':'일시정지'}</span>
+        </div>
+      </div>
+      <button class="anb next" onclick="nextA()">&#9654;</button>
+    </div>
+
+    <div class="tmeta">
+      <div class="ttitle">${tr.name}</div>
+      <div class="tsub">${al.sub}</div>
+      <div class="tbadges"><span class="badge">${al.year}</span><span class="badge">${al.serial}</span></div>
+    </div>
+
+    <div class="pbox">
+      <div>
+        <input type="range" id="prog" min="0" max="${dr||100}" value="${ct}" step="0.5" oninput="seek(this.value)" style="accent-color:${al.p}"/>
+        <div class="trow"><span id="tel">${fmt(ct)}</span><span id="tdur">${fmt(dr)}</span></div>
+      </div>
+      <div class="crow">
+        <button class="cb ${fv?'on':''}" onclick="togFav('${tr.id}')" style="${fv?'color:#f472b6':''}">${sv(I.hrt(fv),22)}</button>
+        <div class="cc">
+          <button class="cb" onclick="prevT()">${sv(I.prev,22)}</button>
+          <button class="pb" onclick="togglePlay()">${sv(ip?I.pause:I.play,22,'color:#0a0a0f')}</button>
+          <button class="cb" onclick="nextT()">${sv(I.next,22)}</button>
+        </div>
+        <button class="cb ${S.repeat?'on':''}" onclick="togRep()">${sv(I.rep,22)}</button>
+      </div>
+      <div class="vrow">
+        <button class="vb" onclick="togMute()" style="color:${S.muted?'#f87171':'var(--primary)'}">${sv(S.muted?I.volx:I.vol,16)}</button>
+        <input type="range" min="0" max="1" step="0.05" value="${S.vol}" oninput="setVol(this.value)" style="width:110px;accent-color:${al.p}"/>
+      </div>
+      <div class="astatus idle" id="astatus">▶ 재생 버튼을 눌러 시작하세요</div>
+    </div>
+
+    <div class="tlbox">
+      <div class="tlhdr">
+        <div class="tllbl"><div class="tldot"></div>트랙리스트</div>
+        ${sv(I.mus,13,`color:${al.p}`)}
+      </div>
+      <ul style="list-style:none;padding:0;margin:0;display:flex;flex-direction:column;gap:2px">${tlist}</ul>
+    </div>
+
+    <div class="frow">
+      <div><div class="flbl">포맷</div><div class="fval">${al.fmt}</div></div>
+      <div style="text-align:right"><div class="flbl">상태</div><div class="stval">${al.status}</div></div>
+    </div>
+  </div>`;
+}
+
+function renderSearch() {
+  const al=a(), q=S.sq;
+  const fl = allT().filter(t => t.name.includes(q) || t.al.title.includes(q));
+  const rh = fl.length===0
+    ? `<p style="font-size:12px;color:rgba(255,255,255,.3);font-family:monospace;text-align:center;padding:20px 0">검색 결과가 없습니다.</p>`
+    : fl.map(tr => {
+        const ai=AL.findIndex(x=>x.id===tr.al.id), ti=tr.al.tracks.findIndex(x=>x.id===tr.id);
+        const cp=S.ai===ai&&S.ti===ti&&S.playing;
+        return `<div class="sres" onclick="goT(${ai},${ti})" style="${cp?`border-color:${tr.al.p}44;background:${tr.al.p}15`:''}">
+          <img class="srimg" src="${tr.al.img}" referrerpolicy="no-referrer"/>
+          <div style="flex:1;min-width:0">
+            <div style="font-size:12px;font-weight:600;color:#fff;margin-bottom:2px;display:flex;align-items:center;gap:6px">
+              ${tr.name}${cp?`<span style="display:inline-block;width:6px;height:6px;border-radius:50%;background:${tr.al.p};animation:blink 1s infinite"></span>`:''}
+            </div>
+            <div style="font-size:10px;font-family:monospace;color:rgba(255,255,255,.4)">${tr.al.title}</div>
+          </div>
+          <span style="font-size:8px;font-family:monospace;padding:1px 4px;border-radius:3px;color:${tr.al.p};background:${tr.al.p}20">Vol.${ai+1}</span>
+        </div>`;
+      }).join('');
+  return `<div class="tab fu">
+    <div><div class="shd">${sv(I.src,18,`color:${al.p}`)} 검색</div><p class="ssub">모든 트랙과 앨범을 검색하세요</p></div>
+    <div class="srwrap">
+      <span class="sico">${sv(I.src,14)}</span>
+      <input class="sri" type="text" placeholder="트랙명 또는 앨범명..." value="${q}" oninput="updSearch(this.value)"/>
+    </div>
+    <div><div class="sublbl">모든 트랙</div><div style="max-height:380px;overflow-y:auto">${rh}</div></div>
+  </div>`;
+}
+
+function renderLib() {
+  const al=a(), total=allT().length, lv=Math.max(1,Math.floor(S.heard.length*1.5));
+  const cc = S.cert
+    ? `<div class="csign" style="border:1px solid ${al.p}44">
+        <div>
+          <div style="font-size:8px;font-family:monospace;letter-spacing:2px;text-transform:uppercase;color:${al.p};margin-bottom:2px">서명</div>
+          <div style="font-size:15px;font-weight:900;color:#fff;font-style:italic">${S.cname||'익명의 수집가'}</div>
+        </div>
+        <div style="display:flex;align-items:center;gap:4px;font-size:9px;font-family:monospace;color:${al.p}">${sv(I.chk,12)} 인증 완료</div>
+      </div>`
+    : `<div>
+        <input class="csinp" type="text" placeholder="인증 서명할 이름을 입력하세요..." value="${S.cname}" oninput="S.cname=this.value"/>
+        <button class="cbtn" ${S.heard.length===0?'disabled':''} onclick="certify()"
+          style="background:${S.heard.length===0?'rgba(255,255,255,.1)':`linear-gradient(90deg,${al.p},${al.s})`};color:${S.heard.length===0?'rgba(255,255,255,.3)':'#0a0a0f'}">
+          인증서 서명하기
+        </button>
+        ${S.heard.length===0?`<p class="cwarn">곡을 1개 이상 청취한 후 인증이 가능합니다.</p>`:''}
+      </div>`;
+  const fh = S.favs.length===0
+    ? `<div style="background:rgba(18,18,30,.4);border:1px solid rgba(255,255,255,.05);border-radius:12px;padding:24px;text-align:center;color:rgba(255,255,255,.3);font-size:10px;font-family:monospace">💜 좋아하는 곡을 하트로 추가해보세요.</div>`
+    : S.favs.map(id => {
+        const f=allT().find(x=>x.id===id); if(!f) return '';
+        const ai=AL.findIndex(x=>x.id===f.al.id), ti=f.al.tracks.findIndex(x=>x.id===f.id);
+        return `<div class="fitem" onclick="goT(${ai},${ti})">
+          <div style="display:flex;align-items:center;gap:8px">${sv(I.str,13,`color:${al.p};fill:${al.p}`)}<span style="font-size:12px;font-weight:600;color:#fff">${f.name}</span></div>
+          <span style="font-size:9px;font-family:monospace;color:rgba(255,255,255,.35)">${f.al.title}</span>
+        </div>`;
+      }).join('');
+  return `<div class="tab fu">
+    <div><div class="shd">${sv(I.lib,18,`color:${al.p}`)} 보관함</div><p class="ssub">나의 음악 컬렉션 프로필</p></div>
+    <div class="sgrid">
+      <div class="scard">${sv(I.dsc,18,`color:${al.p}`)}<div class="slbl">수집 완료 트랙</div><div class="sval2">${S.heard.length} / ${total}</div></div>
+      <div class="scard">${sv(I.flm,18,'color:#f87171')}<div class="slbl">전체 청취력</div><div class="sval2">LV. ${lv}</div></div>
+    </div>
+    <div class="ccard">
+      <div class="cglw" style="background:${al.p}20"></div>
+      <div class="ctop">
+        <div><span class="cltd" style="color:${al.p};background:${al.p}20">한정판</span><div class="ctitle2">정식 인증 수집가</div></div>
+        ${sv(I.awd,22,`color:${S.cert?al.p:'rgba(255,255,255,.2)'}`)}
+      </div>
+      <p class="cbody">위 소지자는 뮤직 앨범 시리즈의 음원을 성실히 감상하고 컬렉션을 완주하였음을 보증합니다.</p>
+      ${cc}
+    </div>
+    <div><div class="sublbl">💜 나의 즐겨찾기</div>${fh}</div>
+  </div>`;
+}
+
+function renderAll() {
+  updT();
+  document.getElementById('mc').innerHTML =
+    S.tab==='홈' ? renderHome() : S.tab==='검색' ? renderSearch() : renderLib();
+  [['홈','nh'],['검색','ns'],['보관함','nl2']].forEach(([tb,id]) => {
+    const el=document.getElementById(id); if(!el) return;
+    const on = S.tab===tb;
+    el.querySelector('svg').style.color = on ? 'var(--primary)' : 'rgba(255,255,255,.35)';
+    el.querySelector('.nl').style.color  = on ? 'var(--primary)' : 'rgba(255,255,255,.35)';
+  });
+}
+
+// 초기화
+updT();
+renderAll();
+loadTrack(t().id, false);
+</script>
+</body>
+</html>
